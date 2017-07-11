@@ -259,7 +259,7 @@ export class UserManager {
             return this.user_model.update(user, {
               emailVerified: true
             })
-              // .then(() => this.emailVerificationCollection.remove(emailCode))
+              .then(() => this.emailVerificationCollection.remove(emailCode))
               .then(() => true)
           })
       })

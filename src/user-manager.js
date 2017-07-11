@@ -213,6 +213,7 @@ var UserManager = (function () {
                 return _this.user_model.update(user, {
                     emailVerified: true
                 })
+                    .then(function () { return _this.emailVerificationCollection.remove(emailCode); })
                     .then(function () { return true; });
             });
         });
