@@ -134,12 +134,13 @@ export class UserService {
     return request => this.checkUsernameOrEmailLogin(request)
       .then(user => {
         currentUser = user
-        if (user.two_factor_enabled && !two_factor.verify_2fa_token(user.two_factor_secret, request.data.twoFactor))
+        if (user.two_factor_enabled && !two_factor.verify_2fa_token(user.two_factor_secret, request.data.twoFactor)) {
           return this.verify2faOneTimeCode(request, currentUser).then(backupCodeCheck => {
             if (!backupCodeCheck)
               throw new Bad_Request('Invalid Two Factor Authentication code.', {key: "invalid-2fa"})
             return this.finishLogin(request, currentUser)
           })
+        }
         return this.finishLogin(request, currentUser)
       })
   }
