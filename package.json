@@ -17,6 +17,7 @@
     "express": "^4.15.2",
     "express-session": "^1.15.1",
     "speakeasy": "^2.0.0",
+    "typeorm": "0.1.7",
     "vineyard-ground": "vineyard-bloom/vineyard-ground#1.0.0-beta",
     "vineyard-lawn": "vineyard-bloom/vineyard-lawn#1.0.0-beta"
   },

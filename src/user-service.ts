@@ -101,7 +101,7 @@ export class UserService {
   }
 
   private _checkLogin(filter: any, password: string) {
-    return this.userManager.getUserModel().first(filter)
+    return this.userManager.getUserByFilter(filter)
       .then(user => {
         if (!user)
           throw new Bad_Request('Invalid credentials.', {key: 'invalid-credentials'})
@@ -214,7 +214,7 @@ export class UserService {
 
   private async getUser(usernameOrUser: string | BaseUser): Promise<BaseUser | undefined> {
     if (typeof usernameOrUser === 'string')
-      return this.userManager.getUserModel().first({username: usernameOrUser})
+      return this.userManager.getUserByFilter({username: usernameOrUser})
     else if (typeof usernameOrUser === 'object')
       return Promise.resolve(usernameOrUser)
 
@@ -261,8 +261,7 @@ export class UserService {
   }
 
   getSanitizedUser(id: string): Promise<BaseUser> {
-    return this.getModel()
-      .getUser(id)
+    return this.userManager.getUser(id)
       .then(sanitize)
   }
 

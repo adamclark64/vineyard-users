@@ -2,83 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const utility_1 = require("./utility");
 const errors_1 = require("vineyard-lawn/source/errors");
+const ground_data_source_1 = require("./data/ground-data-source");
 const bcrypt = require('bcrypt');
 class UserManager {
-    constructor(db, settings) {
-        this.db = db;
-        if (!settings)
-            throw new Error("Missing settings argument.");
+    constructor(dataSource, settings) {
+        this.dataSource = this.dataSource || new ground_data_source_1.GroundDataSource(settings);
         const self = this;
-        this.userModel = self.UserModel = self.User_Model = self.user_model =
-            settings.user_model || settings.model.User;
-        if (settings.model) {
-            settings.model.ground.addDefinitions({
-                "Session": {
-                    "primaryKeys": ["sid"],
-                    "properties": {
-                        "sid": {
-                            "type": "string"
-                        },
-                        "user": {
-                            "type": "uuid",
-                            "nullable": true
-                        },
-                        "expires": {
-                            "type": "datetime"
-                        },
-                        "data": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "TempPassword": {
-                    "primary": "user",
-                    "properties": {
-                        "user": {
-                            "type": "guid"
-                        },
-                        "password": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "EmailVerification": {
-                    "primary": "user",
-                    "properties": {
-                        "user": {
-                            "type": "User"
-                        },
-                        "code": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "Onetimecode": {
-                    "properties": {
-                        "user": {
-                            "type": "User"
-                        },
-                        "code": {
-                            "type": "string"
-                        },
-                        "available": {
-                            "type": "bool"
-                        }
-                    }
-                },
-            });
-            const collections = settings.model.ground.collections;
-            this.sessionCollection = collections.Session;
-            this.tempPasswordCollection = collections.Session;
-            this.emailVerificationCollection = collections.EmailVerification;
-            this.oneTimeCodeCollection = collections.Onetimecode;
-        }
         // Backwards compatibility
         self.create_user = this.createUser;
         self.prepare_new_user = this.prepareNewUser;
     }
     getUserModel() {
-        return this.userModel;
+        return this.dataSource.getUserModel();
     }
     /**
      * Hashes a password using bcrypt.
@@ -134,6 +69,9 @@ class UserManager {
      */
     getUser(id) {
         return this.userModel.get(id).exec();
+    }
+    getUserByFilter(filter) {
+        return this.userModel.first(filter).exec();
     }
     getSessionCollection() {
         return this.sessionCollection;
@@ -303,10 +241,5 @@ class UserManager {
     }
 }
 exports.UserManager = UserManager;
-class User_Manager extends UserManager {
-    constructor(db, settings) {
-        super(db, settings);
-    }
-}
-exports.User_Manager = User_Manager;
+module.exports.User_Manager = UserManager;
 //# sourceMappingURL=user-manager.js.map

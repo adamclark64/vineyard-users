@@ -1,16 +1,12 @@
-import * as Sequelize from 'sequelize'
 import {promiseEach} from "./utility";
-import {Collection, QueryBuilder} from "vineyard-ground"
 import {UserWithUsername, UserWithPassword, BaseUser} from "./User"
 import {BadRequest} from "vineyard-lawn/source/errors";
+import {UserDataSource} from "./data";
+import {GroundDataSource} from "./data/ground-data-source";
+import {Settings} from "./types";
+import {Collection} from "vineyard-ground";
 
 const bcrypt = require('bcrypt');
-
-export interface Settings {
-  user_model?: any
-  tableKeys?: any
-  model: any
-}
 
 export interface TempPassword {
   user: string
@@ -31,93 +27,20 @@ export interface Onetimecode {
 }
 
 export class UserManager {
-  private db: Sequelize.Sequelize
-  private userModel: Collection<UserWithPassword>
-  private sessionCollection: any
-  private tempPasswordCollection: Collection<TempPassword>
-  private emailVerificationCollection: Collection<EmailVerification>
-  private oneTimeCodeCollection: Collection<Onetimecode>
+  dataSource: UserDataSource
 
-  constructor(db: Sequelize.Sequelize, settings: Settings) {
-    this.db = db;
-    if (!settings)
-      throw new Error("Missing settings argument.");
+  constructor(dataSource: UserDataSource | any, settings?: Settings) {
+    this.dataSource = this.dataSource || new GroundDataSource(settings as Settings)
 
     const self: any = this
-    this.userModel = self.UserModel = self.User_Model = self.user_model =
-      settings.user_model || settings.model.User
-
-    if (settings.model) {
-      settings.model.ground.addDefinitions({
-        "Session": {
-          "primaryKeys": ["sid"],
-          "properties": {
-            "sid": {
-              "type": "string"
-            },
-            "user": {
-              "type": "uuid",
-              "nullable": true
-            },
-            "expires": {
-              "type": "datetime"
-            },
-            "data": {
-              "type": "string"
-            }
-          }
-        },
-        "TempPassword": {
-          "primary": "user",
-          "properties": {
-            "user": {
-              "type": "guid"
-            },
-            "password": {
-              "type": "string"
-            }
-          }
-        },
-        "EmailVerification": {
-          "primary": "user",
-          "properties": {
-            "user": {
-              "type": "User"
-            },
-            "code": {
-              "type": "string"
-            }
-          }
-        },
-        "Onetimecode": {
-          "properties": {
-            "user": {
-              "type": "User"
-            },
-            "code": {
-              "type": "string"
-            },
-            "available": {
-              "type": "bool"
-            }
-          }
-        },
-      })
-
-      const collections = settings.model.ground.collections
-      this.sessionCollection = collections.Session
-      this.tempPasswordCollection = collections.Session
-      this.emailVerificationCollection = collections.EmailVerification
-      this.oneTimeCodeCollection = collections.Onetimecode
-    }
 
     // Backwards compatibility
     self.create_user = this.createUser
     self.prepare_new_user = this.prepareNewUser
   }
 
-  getUserModel() {
-    return this.userModel
+  getUserModel(): Collection<UserWithPassword> {
+    return this.dataSource.getUserModel()
   }
 
   /**
@@ -179,6 +102,10 @@ export class UserManager {
    */
   getUser(id: { id: string } | string): Promise<UserWithPassword | undefined> {
     return this.userModel.get(id).exec()
+  }
+
+  getUserByFilter(filter: any): Promise<UserWithPassword | undefined> {
+    return this.userModel.first(filter).exec()
   }
 
   getSessionCollection() {
@@ -339,7 +266,7 @@ export class UserManager {
     return this.emailVerificationCollection.first({user: user.id}).exec()
   }
 
-  getTempPassword(user: BaseUser) {
+  getTempPassword(user: BaseUser): Promise<TempPassword | undefined> {
     return this.tempPasswordCollection.first({user: user.id}).exec()
   }
 
@@ -376,8 +303,4 @@ export class UserManager {
   }
 }
 
-export class User_Manager extends UserManager {
-  constructor(db: Sequelize.Sequelize, settings: Settings) {
-    super(db, settings)
-  }
-}
+module.exports.User_Manager = UserManager

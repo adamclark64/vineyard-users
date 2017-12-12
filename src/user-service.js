@@ -77,7 +77,7 @@ class UserService {
         };
     }
     _checkLogin(filter, password) {
-        return this.userManager.getUserModel().first(filter)
+        return this.userManager.getUserByFilter(filter)
             .then(user => {
             if (!user)
                 throw new vineyard_lawn_1.Bad_Request('Invalid credentials.', { key: 'invalid-credentials' });
@@ -174,7 +174,7 @@ class UserService {
     getUser(usernameOrUser) {
         return __awaiter(this, void 0, void 0, function* () {
             if (typeof usernameOrUser === 'string')
-                return this.userManager.getUserModel().first({ username: usernameOrUser });
+                return this.userManager.getUserByFilter({ username: usernameOrUser });
             else if (typeof usernameOrUser === 'object')
                 return Promise.resolve(usernameOrUser);
             else
@@ -216,8 +216,7 @@ class UserService {
             throw new lawn.Needs_Login();
     }
     getSanitizedUser(id) {
-        return this.getModel()
-            .getUser(id)
+        return this.userManager.getUser(id)
             .then(sanitize);
     }
     addUserToRequest(request) {
