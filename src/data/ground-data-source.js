@@ -115,6 +115,11 @@ class GroundDataSource {
     updateOneTimeCode(oneTimeCode, fields) {
         return null;
     }
+    updateEmailCode(user) {
+        return this.userModel.update(user, {
+            emailVerified: true
+        });
+    }
 }
 exports.GroundDataSource = GroundDataSource;
 //# sourceMappingURL=ground-data-source.js.map

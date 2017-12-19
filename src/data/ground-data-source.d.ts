@@ -25,4 +25,5 @@ export declare class GroundDataSource implements UserDataSource {
     getEmailCode(user: Identity): Promise<EmailVerification | any>;
     getOneTimeCode(user: Identity): Promise<Onetimecode | any>;
     updateOneTimeCode(oneTimeCode: Onetimecode, fields: any): Promise<Onetimecode>;
+    updateEmailCode(user: Identity): Promise<any>;
 }

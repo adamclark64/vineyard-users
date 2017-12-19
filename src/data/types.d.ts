@@ -9,6 +9,7 @@ export interface UserDataSource {
     getUser(id: string): Promise<UserWithPassword | undefined>;
     getUserByFilter(filter: any): Promise<UserWithPassword | undefined>;
     getSessionCollection(): Collection<any>;
+    getUserCollection(): Collection<any>;
     getTempPasswordCollection(): Collection<TempPassword>;
     getOneTimeCodeCollection(): Collection<Onetimecode>;
     getTempPassword(user: Identity): Promise<TempPassword | undefined>;
@@ -18,4 +19,5 @@ export interface UserDataSource {
     getEmailCode(user: Identity): Promise<EmailVerification | undefined>;
     getOneTimeCode(user: Identity): Promise<Onetimecode | undefined>;
     updateOneTimeCode(oneTimeCode: Onetimecode, fields: any): Promise<Onetimecode>;
+    updateEmailCode(user: Identity): Promise<any>;
 }

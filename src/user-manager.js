@@ -57,7 +57,7 @@ class UserManager {
         return utility_1.promiseEach(_uniqueFields, (field) => this.checkUniqueness(userFields, field))
             .then(() => {
             return this.prepareNewUser(userFields)
-                .then(user => this.userModel.create(userFields));
+                .then(user => this.dataSource.createUser(userFields));
         });
     }
     /**
@@ -68,19 +68,19 @@ class UserManager {
      *
      */
     getUser(id) {
-        return this.userModel.get(id).exec();
+        return this.dataSource.getUser(typeof id === 'string' ? id : id.id);
     }
     getUserByFilter(filter) {
-        return this.userModel.first(filter).exec();
+        return this.dataSource.getUserByFilter(filter);
     }
     getSessionCollection() {
-        return this.sessionCollection;
+        return this.dataSource.getSessionCollection();
     }
     getUserCollection() {
-        return this.userModel;
+        return this.dataSource.getUserCollection();
     }
     getOneTimeCodeCollection() {
-        return this.oneTimeCodeCollection;
+        return this.dataSource.getOneTimeCodeCollection();
     }
     tempPasswordHasExpired(tempPassword) {
         const expirationDate = new Date(tempPassword.created.getTime() + (6 * 60 * 60 * 1000));
@@ -120,7 +120,7 @@ class UserManager {
      *
      */
     getUserFromUsername(username) {
-        return this.userModel.first({ username: username })
+        return this.dataSource.getUserByFilter({ username: username })
             .then(user => {
             if (!user)
                 throw new errors_1.BadRequest("Invalid username: " + username);
@@ -135,7 +135,7 @@ class UserManager {
      *
      */
     getUserFromEmail(email) {
-        return this.userModel.first({ email: email })
+        return this.dataSource.getUserByFilter({ email: email })
             .then(user => {
             if (!user)
                 throw new errors_1.BadRequest("Invalid email: " + email);
@@ -148,7 +148,7 @@ class UserManager {
             if (!tempPassword) {
                 const passwordString = Math.random().toString(36).slice(2);
                 return this.hashPassword(passwordString)
-                    .then(hashedPassword => this.tempPasswordCollection.create({
+                    .then(hashedPassword => this.dataSource.createTempPassword({
                     user: user,
                     password: hashedPassword
                 }))
@@ -178,7 +178,7 @@ class UserManager {
             .then(emailCode => {
             if (!emailCode) {
                 const newEmlCode = Math.random().toString(36).slice(2);
-                return this.emailVerificationCollection.create({
+                return this.dataSource.createEmailCode({
                     user: user,
                     code: newEmlCode
                 })
@@ -190,43 +190,39 @@ class UserManager {
         });
     }
     verifyEmailCode(userId, submittedCode) {
-        return this.userModel.first({ id: userId }).exec()
+        return this.getUser(userId)
             .then(user => {
             if (!user)
                 return false;
-            return this.emailVerificationCollection.first({
-                user: userId
-            })
+            return this.dataSource.getEmailCode(user)
                 .then(emailCode => {
                 if (!emailCode || emailCode.code != submittedCode)
                     return Promise.resolve(false);
-                return this.userModel.update(user, {
-                    emailVerified: true
-                })
+                return this.dataSource.updateEmailCode(user)
                     .then(() => true);
             });
         });
     }
     getEmailCode(user) {
-        return this.emailVerificationCollection.first({ user: user.id }).exec();
+        return this.dataSource.getEmailCode(user);
     }
     getTempPassword(user) {
-        return this.tempPasswordCollection.first({ user: user.id }).exec();
+        return this.dataSource.getTempPassword(user);
     }
     getUserOneTimeCode(user) {
-        return this.oneTimeCodeCollection.first({ user: user.id, available: true }).exec();
+        return this.dataSource.getOneTimeCode(user);
     }
     fieldExists(key, value) {
         const filter = {};
         filter[key] = value;
-        return this.userModel.first(filter).exec()
+        return this.getUserByFilter(filter)
             .then((user) => !!user);
     }
     compareOneTimeCode(oneTimeCode, codeRecord) {
         return Promise.resolve(oneTimeCode === codeRecord.code);
     }
     setOneTimeCodeToUnavailable(oneTimeCode) {
-        return this.oneTimeCodeCollection.update(oneTimeCode, { available: false });
+        return this.dataSource.updateOneTimeCode(oneTimeCode, { available: false });
     }
     checkUniqueness(user, field = 'username') {
         return this.fieldExists(field, user[field])
@@ -237,7 +233,7 @@ class UserManager {
         });
     }
     getTempPasswordCollection() {
-        return this.tempPasswordCollection;
+        return this.dataSource.getTempPasswordCollection();
     }
 }
 exports.UserManager = UserManager;

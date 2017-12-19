@@ -58,9 +58,9 @@ export declare class UserManager {
         id: string;
     } | string): Promise<UserWithPassword | undefined>;
     getUserByFilter(filter: any): Promise<UserWithPassword | undefined>;
-    getSessionCollection(): any;
-    getUserCollection(): any;
-    getOneTimeCodeCollection(): any;
+    getSessionCollection(): Collection<any>;
+    getUserCollection(): Collection<any>;
+    getOneTimeCodeCollection(): Collection<Onetimecode>;
     private tempPasswordHasExpired(tempPassword);
     private emailCodeHasExpired(emailCode);
     matchTempPassword(user: BaseUser, password: string): Promise<boolean>;
@@ -84,12 +84,12 @@ export declare class UserManager {
     createTempPassword(username: string | BaseUser): Promise<any>;
     createEmailCode(user: BaseUser): Promise<any>;
     verifyEmailCode(userId: string, submittedCode: string): Promise<boolean>;
-    getEmailCode(user: BaseUser): any;
+    getEmailCode(user: BaseUser): Promise<EmailVerification | undefined>;
     getTempPassword(user: BaseUser): Promise<TempPassword | undefined>;
     getUserOneTimeCode(user: BaseUser): Promise<Onetimecode | undefined>;
     fieldExists(key: string, value: any): Promise<boolean>;
     compareOneTimeCode(oneTimeCode: string, codeRecord: Onetimecode): Promise<boolean>;
-    setOneTimeCodeToUnavailable(oneTimeCode: Onetimecode): any;
+    setOneTimeCodeToUnavailable(oneTimeCode: Onetimecode): Promise<Onetimecode>;
     checkUniqueness(user: BaseUser, field?: string): Promise<void>;
-    getTempPasswordCollection(): any;
+    getTempPasswordCollection(): Collection<TempPassword>;
 }

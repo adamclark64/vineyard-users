@@ -10,11 +10,13 @@ export interface UserDataSource {
 
   createUser(newUser: any): Promise<any>
 
-  getUser(id:string): Promise<UserWithPassword | undefined>
+  getUser(id: string): Promise<UserWithPassword | undefined>
 
   getUserByFilter(filter: any): Promise<UserWithPassword | undefined>
 
   getSessionCollection(): Collection<any>
+
+  getUserCollection(): Collection<any>
 
   getTempPasswordCollection(): Collection<TempPassword>
 
@@ -34,4 +36,5 @@ export interface UserDataSource {
 
   updateOneTimeCode(oneTimeCode: Onetimecode, fields: any): Promise<Onetimecode>
 
+  updateEmailCode(user: Identity): Promise<any>
 }

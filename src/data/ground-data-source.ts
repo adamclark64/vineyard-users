@@ -142,4 +142,10 @@ export class GroundDataSource implements UserDataSource {
   updateOneTimeCode(oneTimeCode: Onetimecode, fields: any): Promise<Onetimecode> {
     return null
   }
+
+  updateEmailCode(user: Identity): Promise<any> {
+    return this.userModel.update(user, {
+      emailVerified: true
+    })
+  }
 }

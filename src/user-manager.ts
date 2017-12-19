@@ -89,7 +89,7 @@ export class UserManager {
     return promiseEach(_uniqueFields, (field: any) => this.checkUniqueness(userFields, field))
       .then(() => {
         return this.prepareNewUser(userFields)
-          .then(user => this.userModel.create(userFields))
+          .then(user => this.dataSource.createUser(userFields))
       })
   }
 
@@ -101,23 +101,23 @@ export class UserManager {
    *
    */
   getUser(id: { id: string } | string): Promise<UserWithPassword | undefined> {
-    return this.userModel.get(id).exec()
+    return this.dataSource.getUser(typeof id === 'string' ? id : id.id)
   }
 
   getUserByFilter(filter: any): Promise<UserWithPassword | undefined> {
-    return this.userModel.first(filter).exec()
+    return this.dataSource.getUserByFilter(filter)
   }
 
   getSessionCollection() {
-    return this.sessionCollection
+    return this.dataSource.getSessionCollection()
   }
 
   getUserCollection() {
-    return this.userModel
+    return this.dataSource.getUserCollection()
   }
 
   getOneTimeCodeCollection() {
-    return this.oneTimeCodeCollection
+    return this.dataSource.getOneTimeCodeCollection()
   }
 
   private tempPasswordHasExpired(tempPassword: TempPassword): boolean {
@@ -165,7 +165,7 @@ export class UserManager {
    *
    */
   getUserFromUsername(username: string): Promise<UserWithPassword> {
-    return this.userModel.first({username: username})
+    return this.dataSource.getUserByFilter({username: username})
       .then(user => {
         if (!user)
           throw new BadRequest("Invalid username: " + username)
@@ -182,7 +182,7 @@ export class UserManager {
    *
    */
   getUserFromEmail(email: string): Promise<UserWithPassword> {
-    return this.userModel.first({email: email})
+    return this.dataSource.getUserByFilter({email: email})
       .then(user => {
         if (!user)
           throw new BadRequest("Invalid email: " + email)
@@ -197,7 +197,7 @@ export class UserManager {
         if (!tempPassword) {
           const passwordString = Math.random().toString(36).slice(2)
           return this.hashPassword(passwordString)
-            .then(hashedPassword => this.tempPasswordCollection.create({
+            .then(hashedPassword => this.dataSource.createTempPassword({
                 user: user,
                 password: hashedPassword
               })
@@ -229,7 +229,7 @@ export class UserManager {
       .then(emailCode => {
         if (!emailCode) {
           const newEmlCode = Math.random().toString(36).slice(2)
-          return this.emailVerificationCollection.create({
+          return this.dataSource.createEmailCode({
             user: user,
             code: newEmlCode
           })
@@ -241,43 +241,38 @@ export class UserManager {
   }
 
   verifyEmailCode(userId: string, submittedCode: string): Promise<boolean> {
-    return this.userModel.first({id: userId}).exec()
+    return this.getUser(userId)
       .then(user => {
         if (!user)
           return false
 
-        return this.emailVerificationCollection.first({
-          user: userId
-        })
+        return this.dataSource.getEmailCode(user)
           .then(emailCode => {
             if (!emailCode || emailCode.code != submittedCode)
               return Promise.resolve(false)
 
-            return this.userModel.update(user, {
-              emailVerified: true
-            })
-            // .then(() => this.emailVerificationCollection.remove(emailCode))
+            return this.dataSource.updateEmailCode(user)
               .then(() => true)
           })
       })
   }
 
   getEmailCode(user: BaseUser) {
-    return this.emailVerificationCollection.first({user: user.id}).exec()
+    return this.dataSource.getEmailCode(user)
   }
 
   getTempPassword(user: BaseUser): Promise<TempPassword | undefined> {
-    return this.tempPasswordCollection.first({user: user.id}).exec()
+    return this.dataSource.getTempPassword(user)
   }
 
   getUserOneTimeCode(user: BaseUser): Promise<Onetimecode | undefined> {
-    return this.oneTimeCodeCollection.first({user: user.id, available: true}).exec()
+    return this.dataSource.getOneTimeCode(user)
   }
 
   fieldExists(key: string, value: any): Promise<boolean> {
     const filter: any = {}
     filter[key] = value
-    return this.userModel.first(filter).exec()
+    return this.getUserByFilter(filter)
       .then((user?: BaseUser) => !!user)
   }
 
@@ -286,7 +281,7 @@ export class UserManager {
   }
 
   setOneTimeCodeToUnavailable(oneTimeCode: Onetimecode) {
-    return this.oneTimeCodeCollection.update(oneTimeCode, {available: false})
+    return this.dataSource.updateOneTimeCode(oneTimeCode, {available: false})
   }
 
   checkUniqueness(user: BaseUser, field = 'username') {
@@ -299,7 +294,7 @@ export class UserManager {
   }
 
   getTempPasswordCollection() {
-    return this.tempPasswordCollection
+    return this.dataSource.getTempPasswordCollection()
   }
 }
 

@@ -8,7 +8,7 @@ export class LoggedInPreprocessor extends VersionPreprocessor {
   }
 
   createAnonymous(): Request_Processor {
-    return request => this.common(request)
+    return (request: Request) => this.common(request)
   }
 
   createAuthorized(userService: UserService): Request_Processor {
